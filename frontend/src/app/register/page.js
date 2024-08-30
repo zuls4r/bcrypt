@@ -2,39 +2,45 @@
 
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
 import axios from "axios";
-import bcrypt from "bcryptjs"
+import bcrypt from "bcryptjs";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
-  
-  const login = async (email, password) => {
-    try {
-      const response = await axios.post("http://localhost:9000/auth/login", {
-        email
-      });
-      
-      const isValid = bcrypt.compareSync(password, response.data.password); 
-      
+  const register = async (name, email, password) => {
 
-      if (isValid) {
-        toast(`Hi ${response.data.name}`);
-      } else {
-        toast.error("Invalid email or password");
-      }
+    const salt = bcrypt.genSaltSync(10);
+const hashedPassword = bcrypt.hashSync(password, salt);
+    try {
+      const response = await axios.post("http://localhost:9000/auth/register", {
+        name,
+        email,
+        password:hashedPassword
+      });
+      toast.success(response.data.message);
+      console.log(response.data.newUser);
     } catch (error) {
-      console.error(error);
-      toast.error("An error occurred during login");
+      console.log(error);
+      toast.error(error.message);
     }
   };
 
   return (
     <div className="flex items-center justify-center w-full h-screen bg-slate-100">
       <div className="flex flex-col gap-2 p-6 bg-white rounded-sm shadow-md *:text-black">
+        <input
+          className="border p-2 w-[300px]"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+          }}
+        />
         <input
           className="border p-2 w-[300px]"
           placeholder="Email"
@@ -52,16 +58,13 @@ const Page = () => {
           }}
         />
         <button
-          className="p-2 mt-6 text-white bg-green-500 rounded-md"
-          onClick={() => login(email, password)}
+          className="p-2 mt-6 text-white bg-blue-500 rounded-md"
+          onClick={() => register(name, email, password)}
         >
-          Submit
+          sign up
         </button>
-        <button
-          onClick={() => router.push("/register")}
-          className="mt-3 text-xs"
-        >
-          register
+        <button onClick={() => router.push("/")} className="mt-3 text-xs">
+          login
         </button>
       </div>
     </div>
